@@ -1,79 +1,113 @@
-import pandas as pd
-pd.options.mode.chained_assignment = None 
-import numpy as np
+"""
+#!usr/bin/Python3.6.1
+Created on 25-Apr-2017
+@author: Vicky Fernandes
+@organization: Don Bosco Institute of Technology, Mumbai.
+This module is used for pre-processing of python and Java files.
+"""
+
 import re
-import nltk
-from gensim.models import word2vec
-from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
-import matplotlib.pyplot as plt
-from keras.preprocessing.text import text_to_word_sequence
-from keras.preprocessing.text import Tokenizer
-import multiprocessing # for concurrency 
-from gensim.models import Word2Vec
-from time import time 
-import pandas as pd
-import re
+import keyword
+import os
+from collections import Counter
+import threading
 
-def remove_comments(text):
-    return re.sub(re.compile('#.*?\n'), '', text)
-code = '#pac kage c om.on ed atap oint.con fig;import co m.on edata point.re po.* ; publ ic cl ass Conf ig { priv ate stat ic Config instance = null ; private Ques tionR eposi tory quest ionRepo sitory = null ;pri vate Me dica tio nRep osi tory med icatio nRepo sitory = null ; private Res ponse Reposit ory respon seReposi tory = null ; /*** Use Config.getInstance() */ private Config() {questionRepository = new QuestionRepositoryImpl() ; responseRepository = new ResponseRepositoryImpl();medicationRepository = new MedicationRepositoryImpl() ; } public static Config getInstance() { if ( Config.instance == null ) {Config.instance = new Config(); } return Config.instance ; } public QuestionRepository getQuestionRepository() { return questionRepository ; } public ResponseRepository getResponseRepository() { return responseRepository ; } public MedicationRepository getMedicationRepository() { return medicationRepository ; } } '
-#remove_comments(code) 
-text_to_word_sequence(code, lower=True, split=' ')
-text_to_word_sequence(code, filters='\t\n', lower=True, split=' ')
-#t = Tokenizer(num_words=None, filters='\t\n', lower=True, split=' ', char_level=False)
-docs = [code]
-print ( "line 26", docs)
-#t.fit_on_texts(docs)
-#print ('Number docs', t.document_count)
-#print(t.word_index)
-#print(t.word_docs)
-#encoded_docs = texts_to_matrix(docs, mode='count')
-#print(encoded_docs)
+inputdir = "C:\input/"
+outputdir = "C:\output/"
 
+#filelist = os.listdir(inputdir)
 
-cores = multiprocessing.cpu_count()
-# specifies word2vec params
-w2v_model = Word2Vec(min_count=20, window=2, size=300, sample=6e-5, alpha=0.03, min_alpha=0.0007,  negative=20, workers=cores-1)
-# building vocabulary 
-t = time()
-w2v_model.build_vocab(docs, progress_per=10000)
-print('Time to build vocab: {} mins'.format(round((time() - t) / 60, 2)))
-print ( "line 42", docs)
-# training word2vec model
-t = time()
-w2v_model.train(docs, total_examples=w2v_model.corpus_count, epochs=30, report_delay=1) # epochs is number of iterations over corpus 
-print('Time to train the model: {} mins'.format(round((time() - t) / 60, 2)))
-print ( "line 47", docs)
-# init_sims make memory more effecient if called it indicates that there is no further training 
-#w2v_model.init_sims(replace=True)
+class Preprocessor(threading.Thread):
+    def __init__(self, target_file_path):
+        threading.Thread.__init__(self) # Initialising Thread
+        self.path = target_file_path # File path
+        self.fname = None; # File name
+        self.counter = None;
+        return
 
+    def run(self): # Main execution function
+        file_object = None # File object
 
-def tsne_plot(model):
-    "Creates and TSNE model and plots it"
-    labels = []
-    tokens = []
-    for docs in model.wv.vocab:
-        tokens.append(model[docs])
-     
-        for e_word in docs:
-            labels.append(e_word)
-    tsne_model = TSNE(perplexity=40, n_components=2, init='pca', n_iter=2500, random_state=23)
-    new_values = tsne_model.fit_transform(tokens)
-    x = []
-    y = []
-    for value in new_values:
-        x.append(value[0])
-        y.append(value[1])       
-    plt.figure(figsize=(16, 16)) 
-    for i in range(len(x)):
-        plt.scatter(x[i],y[i])
-        plt.annotate(labels[i],
-                     xy=(x[i], y[i]),
-                     xytext=(5, 2),
-                     textcoords='offset points',
-                     ha='right',
-                     va='bottom')
-    plt.show()
+        try:
+            file_object = open('data/dataset.java','r', encoding='utf-8')
+        except FileNotFoundError:
+            print("[ERROR] File "+'data/dataset.java','r', encoding='utf-8'+" not found")
+            file_object = None
+            return
+        except IsADirectoryError:
+            print("Skipping ", "data/dataset.java','r', encoding='utf-8", ": it is a directory")
+            return
 
-tsne_plot(w2v_model)
+        data = file_object.read()
+        self.fname = file_object.name
+        output = self.scpp(data)
+        # print(self.fname, ": ", output)
+        self.counter = self.word_counter(output)
+        return
+
+    def scpp(self, fin):
+        '''
+        - Handles individual text blobs from files (i.e. per file)
+        - Assuming fin is output of file.read()
+        - i -> self.fname
+        '''
+
+        # remove special characters from string and convert to lower-case
+        char_string = re.sub('[^a-zA-Z._]', ' ', fin).lower()
+
+        # remove single occurrences of characters
+        final_string = re.sub(r'(?:^| )\w(?:$| )', '', char_string).strip()
+
+        if self.fname.endswith(".py"):
+            reservedwords=[]  # empty list to store the reserved keywords
+            reservedwords = keyword.kwlist  # reserved keywords assigned to reservedWords list
+
+        if self.fname.endswith(".java"):
+            reservedwords = ['abstract', 'continue', 'for', 'new', 'switch', 'assert',
+                                'default', 'goto', 'package', 'synchronized', 'boolean', 'do',
+                                'if', 'private', 'this', 'break', 'double', 'implements', 'protected',
+                                'throw', 'byte', 'else', 'import', 'public', 'throws', 'case', 'enum',
+                                'instanceof', 'return', 'transient', 'catch', 'extends', 'int', 'short',
+                                'try', 'char', 'final', 'interface', 'static', 'void', 'class', 'finally',
+                                'long', 'strictfp', 'volatile', 'const', 'float',
+                                'native', 'super', 'while']  # list to store the reserved keywords
+
+        for word in reservedwords:            # checking if reserved keyword exists in string or not
+            if word in final_string:
+                # substitute reserved keywords with no spaces
+                final_string = re.sub(r' \b' + word + r'\b', '', final_string)
+
+            else:
+                continue
+
+        return final_string
+
+    def word_counter(self, final_string):
+        words = final_string.split()
+        counter = Counter(words)
+        return(counter)
+        '''
+        # Uncomment to see output
+        key = counter.keys()
+        value = counter.values()
+        print(key)
+        print(value)
+        '''
+    
+    def get_word_count(self):
+        return(self.counter);
+
+'''
+#This is another logic for a word frequency counter. But I would mostly prefer using collections for simplicity purposes
+            match_pattern = re.findall(r'\b' + r'[a-z]{2,1000}', final_string)
+            frequency = {}
+            for word in match_pattern:
+                count = frequency.get(word, 0)
+                frequency[word] = count + 1
+                frequency_list = frequency.keys()
+            
+            #frequency_list = frequency.keys()
+            print(frequency_list)
+            for words in frequency_list:
+                print(words, frequency[words])
+'''

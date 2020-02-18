@@ -10,7 +10,7 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from matplotlib import pyplot
 
-java_code = open('data/code.java','r')
+java_code = open('data/dataset.java','r')
 fragments = java_code.readlines();
 java_code.close()
 def preprocessor(data):
@@ -46,29 +46,6 @@ print(ft_model.wv['print'])
 print(ft_model.wv.similarity(w1='void', w2='return'))
 
 
-#words = sum([[k] + v for k, v in similar_words.items()], [])
-#wvs = ft_model.wv[words]
-
-#pca = PCA(n_components=2)
-#np.set_printoptions(suppress=True)
-#P = pca.fit_transform(wvs)
-#labels = words
-
-#plt.figure(figsize=(18, 10))
-#plt.scatter(P[:, 0], P[:, 1], c='lightgreen', edgecolors='g')
-#for label, x, y in zip(labels, P[:, 0], P[:, 1]):
-#    plt.annotate(label, xy=(x+0.06, y+0.03), xytext=(0, 0), textcoords='offset points')
-#plt.show()
-
-#X = ft_model[ft_model.wv.vocab]
-#pca = PCA(n_components=2)
-#result = pca.fit_transform(X)
-## create a scatter plot of the projection
-#pyplot.scatter(result[:, 0], result[:, 1])
-#words = list(ft_model.wv.vocab)
-#for i, word in enumerate(words):
-#	pyplot.annotate(word, xy=(result[i, 0], result[i, 1]))
-#pyplot.show()
 
 def tsne_plot(ft_model):
     "Creates and TSNE model and plots it"

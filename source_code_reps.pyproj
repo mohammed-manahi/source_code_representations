@@ -21,11 +21,11 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="bla.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="preprocessor.py" />
     <Compile Include="run_fasttext.py" />
+    <Compile Include="source_code_representatios.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="tokeniser.py">
       <SubType>Code</SubType>
     </Compile>
@@ -43,6 +43,7 @@
   <ItemGroup>
     <Content Include="data\code2.java" />
     <Content Include="data\code.txt" />
+    <Content Include="data\code.java" />
     <Content Include="data\dataset.java" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

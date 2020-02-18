@@ -10,31 +10,26 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from matplotlib import pyplot
 
-java_code = open('data/code.java','r')
-fragments = java_code.readlines();
+java_code = open('data/dataset.java','r', encoding='utf-8')
+fragments = java_code.readlines()
+fragremnt= [fragment.lower() for fragment in fragments]
 java_code.close()
-def preprocessor(data):
- for x in re.findall(r'("[^\n]*"(?!\\))|(//[^\n]*$|/(?!\\)\*[\s\S]*?\*(?!\\)/)',s,8):s=s.replace(x[1],'')
- print(data)
 
- preprocessor(fragments)
-#print(java_code)
+
+
 def tokenizer(fragments):
     for framgent in fragments:
         tokens = list(javalang.tokenizer.tokenize(framgent))
-        for token in tokens:
-            #print(token, javalang.tokenizer.tokenize(token))
-            tokens_list = [token]
+        print(tokens)
     return(tokens_list)
 
 
 wpt = nltk.WordPunctTokenizer()
 tokenized_corpus = [wpt.tokenize(document) for document in fragments]
-feature_size = 100    # Word vector dimensionality  
-window_context = 50          # Context window size                                                                                    
-min_word_count = 5   # Minimum word count                        
+feature_size = 100    # Word vector dimensionality
+window_context = 50          # Context window size
+min_word_count = 5   # Minimum word count
 sample = 1e-3   # Downsample setting for frequent words
-
 
 ft_model = FastText(tokenized_corpus, size=feature_size, window=window_context, 
                     min_count=min_word_count,sample=sample, sg=1, iter=50)
@@ -43,33 +38,7 @@ similar_words = {search_term: [item[0] for item in ft_model.wv.most_similar([sea
                   for search_term in ['class']}
 print(similar_words)
 print(ft_model.wv['print'])
-print(ft_model.wv.similarity(w1='void', w2='return'))
-
-
-#words = sum([[k] + v for k, v in similar_words.items()], [])
-#wvs = ft_model.wv[words]
-
-#pca = PCA(n_components=2)
-#np.set_printoptions(suppress=True)
-#P = pca.fit_transform(wvs)
-#labels = words
-
-#plt.figure(figsize=(18, 10))
-#plt.scatter(P[:, 0], P[:, 1], c='lightgreen', edgecolors='g')
-#for label, x, y in zip(labels, P[:, 0], P[:, 1]):
-#    plt.annotate(label, xy=(x+0.06, y+0.03), xytext=(0, 0), textcoords='offset points')
-#plt.show()
-
-#X = ft_model[ft_model.wv.vocab]
-#pca = PCA(n_components=2)
-#result = pca.fit_transform(X)
-## create a scatter plot of the projection
-#pyplot.scatter(result[:, 0], result[:, 1])
-#words = list(ft_model.wv.vocab)
-#for i, word in enumerate(words):
-#	pyplot.annotate(word, xy=(result[i, 0], result[i, 1]))
-#pyplot.show()
-
+print(ft_model.wv.similarity(w1='class', w2='interface'))
 def tsne_plot(ft_model):
     "Creates and TSNE model and plots it"
     labels = []
@@ -96,7 +65,6 @@ def tsne_plot(ft_model):
     plt.show()
 
 tsne_plot(ft_model)
-
 def closest_words_tsne_plot(ft_model, word):
     arr = np.empty((1,100), dtype='f')
     word_labels = [word]
@@ -118,8 +86,8 @@ def closest_words_tsne_plot(ft_model, word):
     plt.scatter(x_coords, y_coords)
     for label, x, y in zip(word_labels, x_coords, y_coords):
         plt.annotate(label, xy=(x, y), xytext=(0, 0), textcoords='offset points')
-    plt.xlim(x_coords.min()+0.00005, x_coords.max()+0.00005)
-    plt.ylim(y_coords.min()+0.00005, y_coords.max()+0.00005)
+    plt.xlim(x_coords.min() + 0.00005, x_coords.max() + 0.00005)
+    plt.ylim(y_coords.min() + 0.00005, y_coords.max() + 0.00005)
     plt.show()
 
 closest_words_tsne_plot(ft_model, 'print')
